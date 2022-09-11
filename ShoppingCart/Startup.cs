@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ using ShoppingCart.Application.Baskets.Commands;
 using ShoppingCart.Application.Baskets.Models;
 using ShoppingCart.Application.Baskets.Queries;
 using ShoppingCart.Application.ErrorHandling;
+using ShoppingCart.DataAccess.Context;
 using ShoppingCart.DataAccess.Repositories;
 using System;
 using System.Collections.Generic;
@@ -43,11 +45,15 @@ namespace ShoppingCart.Api
             services.AddMediatR(typeof(Startup).GetTypeInfo().Assembly);
 
             #region Register app services
-            services.AddSingleton<IBasketRepository, BasketRepository>();
-            services.AddSingleton<IRequestHandler<GetBasketByIdQuery, Basket>, GetBasketByIdQuery.Handler>();
-            services.AddSingleton<IRequestHandler<AddBasketCommand, Basket>, AddBasketCommand.Handler>();
-            services.AddSingleton<IRequestHandler<AddArticleToBasketCommand, Basket>, AddArticleToBasketCommand.Handler>();
-            services.AddSingleton<IRequestHandler<CloseBasketCommand, Unit>, CloseBasketCommand.Handler>();
+            services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<IRequestHandler<GetBasketByIdQuery, Basket>, GetBasketByIdQuery.Handler>();
+            services.AddScoped<IRequestHandler<AddBasketCommand, Basket>, AddBasketCommand.Handler>();
+            services.AddScoped<IRequestHandler<AddArticleToBasketCommand, Basket>, AddArticleToBasketCommand.Handler>();
+            services.AddScoped<IRequestHandler<CloseBasketCommand, Unit>, CloseBasketCommand.Handler>();
+            #endregion
+
+            #region Register DB
+            services.AddDbContext<ShoppingCartContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ShoppingCartConection")));
             #endregion
         }
 
