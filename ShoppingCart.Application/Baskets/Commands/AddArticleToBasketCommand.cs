@@ -17,9 +17,9 @@ namespace ShoppingCart.Application.Baskets.Commands
     {
         private Guid BasketCode { get; set; }
 
-        public void AppendBasketCode(Guid basketId)
+        public void AppendBasketCode(Guid basketCode)
         {
-            BasketCode = basketId;
+            BasketCode = basketCode;
         }
 
         public string Item { get; set; }

@@ -10,6 +10,7 @@ namespace ShoppingCart.Application.Baskets.Models
         private const decimal vat = 10; 
 
         public int BasketId { get; set; }
+        public Guid BasketCode { get; set; }
         public string Customer { get; set; }
         public bool PaysVAT { get; set; }
         public bool IsClosed { get; set; }
@@ -26,6 +27,7 @@ namespace ShoppingCart.Application.Baskets.Models
             return new Basket
             {
                 BasketId = basket.BasketId,
+                BasketCode = basket.BasketCode,
                 Customer = basket.Customer,
                 PaysVAT = basket.PaysVAT,
                 IsClosed = basket.IsClosed,

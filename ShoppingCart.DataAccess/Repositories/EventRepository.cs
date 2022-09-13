@@ -26,7 +26,7 @@ namespace ShoppingCart.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
 
-            _logger.Log(LogLevel.Information, $"Successfully persisted {ev.EventType} event.");
+            _logger.LogInformation("Successfully persisted {EventType} event.", ev.EventType);
         }
     }
 }
