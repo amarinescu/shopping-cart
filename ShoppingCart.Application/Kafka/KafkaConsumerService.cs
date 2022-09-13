@@ -3,6 +3,7 @@ using Confluent.Kafka.Admin;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ShoppingCart.Application.Kafka.Commands;
 using ShoppingCart.DataAccess.Context;
 using ShoppingCart.DataAccess.Entities;
@@ -20,10 +21,12 @@ namespace ShoppingCart.Application.Kafka
     public class KafkaConsumerService : BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<KafkaConsumerService> _logger;
 
-        public KafkaConsumerService(IServiceScopeFactory serviceScopeFactory)
+        public KafkaConsumerService(IServiceScopeFactory serviceScopeFactory, ILogger<KafkaConsumerService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,7 +35,7 @@ namespace ShoppingCart.Application.Kafka
             await LaunchKafkaConsumerInBackground();
         }
 
-        private static async Task InitKafka()
+        private async Task InitKafka()
         {
             using (var adminClient = new AdminClientBuilder(KafkaCloudConfig.GetConfig()).Build())
             {
@@ -44,7 +47,7 @@ namespace ShoppingCart.Application.Kafka
                 catch (CreateTopicsException e)
                 {
                     if (e.Results[0].Error.Code == ErrorCode.TopicAlreadyExists)
-                        Console.WriteLine("Topic already exists"); //todo: replace with logs
+                        _logger.Log(LogLevel.Information, "Topic already exists");
                     else
                         throw;
                 }
