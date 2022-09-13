@@ -12,7 +12,7 @@ namespace ShoppingCart.Application.Baskets.Queries
 {
     public class GetBasketByIdQuery : IRequest<Basket>
     {
-        public int BasketId { get; set; }
+        public Guid BasketCode { get; set; }
 
         public class Handler : IRequestHandler<GetBasketByIdQuery, Basket>
         {
@@ -25,10 +25,10 @@ namespace ShoppingCart.Application.Baskets.Queries
 
             public async Task<Basket> Handle(GetBasketByIdQuery request, CancellationToken cancellationToken)
             {
-                var basket = await _basketRepository.GetBasketById(request.BasketId);
+                var basket = await _basketRepository.GetBasketByBasketCode(request.BasketCode);
 
                 if(basket == null)
-                    throw new BusinessException($"The basket with id {request.BasketId} was not found.", System.Net.HttpStatusCode.NotFound);
+                    throw new BusinessException($"The basket with id {request.BasketCode} was not found.", System.Net.HttpStatusCode.NotFound);
 
                 return Basket.FromEntity(basket);
             }

@@ -7,6 +7,7 @@ namespace ShoppingCart.DataAccess.Entities
     public class Basket
     {
         public int BasketId { get; set; }
+        public Guid BasketCode { get; set; }
         public string Customer { get; set; }
         public bool PaysVAT { get; set; }
         public bool IsPayed { get; set; }

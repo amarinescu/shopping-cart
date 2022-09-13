@@ -15,6 +15,8 @@ using ShoppingCart.Application.Baskets.Commands;
 using ShoppingCart.Application.Baskets.Models;
 using ShoppingCart.Application.Baskets.Queries;
 using ShoppingCart.Application.ErrorHandling;
+using ShoppingCart.Application.Kafka;
+using ShoppingCart.Application.Kafka.Commands;
 using ShoppingCart.DataAccess.Context;
 using ShoppingCart.DataAccess.Repositories;
 using System;
@@ -46,14 +48,25 @@ namespace ShoppingCart.Api
 
             #region Register app services
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IKafkaProducer, KafkaProducer>();
+
             services.AddScoped<IRequestHandler<GetBasketByIdQuery, Basket>, GetBasketByIdQuery.Handler>();
-            services.AddScoped<IRequestHandler<AddBasketCommand, Basket>, AddBasketCommand.Handler>();
-            services.AddScoped<IRequestHandler<AddArticleToBasketCommand, Basket>, AddArticleToBasketCommand.Handler>();
+            services.AddScoped<IRequestHandler<AddBasketCommand, Guid>, AddBasketCommand.Handler>();
+            services.AddScoped<IRequestHandler<AddArticleToBasketCommand, Unit>, AddArticleToBasketCommand.Handler>();
             services.AddScoped<IRequestHandler<CloseBasketCommand, Unit>, CloseBasketCommand.Handler>();
+
+            services.AddScoped<IRequestHandler<HandleBasketAddedCommand, Unit>, HandleBasketAddedCommand.Handler>();
+            services.AddScoped<IRequestHandler<HandleBasketItemAddedCommand, Unit>, HandleBasketItemAddedCommand.Handler>();
+            services.AddScoped<IRequestHandler<HandleBasketClosedCommand, Unit>, HandleBasketClosedCommand.Handler>();
             #endregion
 
             #region Register DB
             services.AddDbContext<ShoppingCartContext>(options => options.UseNpgsql(Configuration.GetConnectionString("ShoppingCartConection")));
+            #endregion
+
+            #region Register Hosted service
+            services.AddHostedService<KafkaConsumerService>();
             #endregion
         }
 

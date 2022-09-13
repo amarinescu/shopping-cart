@@ -1,46 +1,67 @@
 ﻿using MediatR;
 using ShoppingCart.Application.Baskets.Models;
 using ShoppingCart.Application.ErrorHandling;
+using ShoppingCart.Application.Kafka;
+using ShoppingCart.DataAccess.Entities;
 using ShoppingCart.DataAccess.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ShoppingCart.Application.Baskets.Commands
 {
-    public class AddArticleToBasketCommand : IRequest<Basket>
+    public class AddArticleToBasketCommand : IRequest<Unit>
     {
-        private int BasketId { get; set; }
+        private Guid BasketCode { get; set; }
 
-        public void AppendBasketId(int basketId)
+        public void AppendBasketCode(Guid basketId)
         {
-            BasketId = basketId;
+            BasketCode = basketId;
         }
 
         public string Item { get; set; }
         public decimal Price { get; set; }
 
-        public class Handler : IRequestHandler<AddArticleToBasketCommand, Basket>
+        public class Handler : IRequestHandler<AddArticleToBasketCommand, Unit>
         {
             private readonly IBasketRepository _basketRepository;
+            private readonly IEventRepository _eventRepository;
+            private readonly IKafkaProducer _kafkaProducer;
 
-            public Handler(IBasketRepository basketRepository)
+            public Handler(IBasketRepository basketRepository, IEventRepository eventRepository, IKafkaProducer kafkaProducer)
             {
                 _basketRepository = basketRepository;
+                _eventRepository = eventRepository;
+                _kafkaProducer = kafkaProducer;
             }
 
-            public async Task<Basket> Handle(AddArticleToBasketCommand request, CancellationToken cancellationToken)
+            public async Task<Unit> Handle(AddArticleToBasketCommand request, CancellationToken cancellationToken)
             {
-                var basket = await _basketRepository.GetBasketById(request.BasketId);
+                var basket = await _basketRepository.GetBasketByBasketCode(request.BasketCode);
 
                 if (basket == null)
-                    throw new BusinessException($"The basket with id {request.BasketId} was not found.", System.Net.HttpStatusCode.NotFound);
+                    throw new BusinessException($"The basket with id {request.BasketCode} was not found.", System.Net.HttpStatusCode.NotFound);
 
-                var returnBasket = await _basketRepository.AddArticleToBasket(request.BasketId, new DataAccess.Entities.Article { Item = request.Item, Price = request.Price });
+                var article = new DataAccess.Entities.Article
+                {
+                    Item = request.Item,
+                    Price = request.Price
+                };
 
-                return Basket.FromEntity(returnBasket);
+                var ev = new Event
+                {
+                    EventType = EventType.BasketItemAdded,
+                    EntityIdentifier = basket.BasketCode,
+                    Entity = JsonSerializer.Serialize(article)
+                };
+
+                await _eventRepository.PersistEvent(ev);
+                await _kafkaProducer.Produce(ev);
+
+                return Unit.Value;
             }
         }
     }

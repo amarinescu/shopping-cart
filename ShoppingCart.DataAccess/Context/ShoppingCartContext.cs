@@ -13,5 +13,6 @@ namespace ShoppingCart.DataAccess.Context
         public ShoppingCartContext(DbContextOptions<ShoppingCartContext> options) : base(options) { }
 
         public virtual DbSet<Basket> Baskets { get; set; }
+        public virtual DbSet<Event> Events { get; set; }
     }
 }

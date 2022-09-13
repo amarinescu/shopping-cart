@@ -18,9 +18,9 @@ namespace ShoppingCart.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<Basket> AddArticleToBasket(int basketId, Article article)
+        public async Task<Basket> AddArticleToBasket(Guid basketCode, Article article)
         {
-            var targetBasket = await _context.Baskets.Include(basket => basket.Articles).FirstAsync(b => b.BasketId == basketId);
+            var targetBasket = await _context.Baskets.Include(basket => basket.Articles).FirstAsync(b => b.BasketCode == basketCode);
 
             if (targetBasket.Articles == null)
                 targetBasket.Articles = new List<Article>();
@@ -32,24 +32,16 @@ namespace ShoppingCart.DataAccess.Repositories
             return targetBasket;
         }
 
-        public async Task<Basket> AddBasket(string customer, bool paysVAT)
+        public async Task AddBasket(Basket basket)
         {
-            var newBasket = new Basket
-            {
-                Customer = customer,
-                PaysVAT = paysVAT,
-            };
-
-            _context.Baskets.Add(newBasket);
+            _context.Baskets.Add(basket);
 
             await _context.SaveChangesAsync();
-
-            return newBasket;
         }
 
-        public async Task CloseBasket(int basketId, bool payed)
+        public async Task CloseBasket(Guid basketCode, bool payed)
         {
-            var targetBasket = await _context.Baskets.FirstAsync(b => b.BasketId == basketId);
+            var targetBasket = await _context.Baskets.FirstAsync(b => b.BasketCode == basketCode);
 
             targetBasket.IsClosed = true;
             targetBasket.IsPayed = payed;
@@ -57,9 +49,9 @@ namespace ShoppingCart.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Basket> GetBasketById(int basketId)
+        public async Task<Basket> GetBasketByBasketCode(Guid basketCode)
         {
-            return await _context.Baskets.Include(basket => basket.Articles).FirstOrDefaultAsync(b => b.BasketId == basketId);
+            return await _context.Baskets.Include(basket => basket.Articles).FirstOrDefaultAsync(b => b.BasketCode == basketCode);
         }
     }
 }
