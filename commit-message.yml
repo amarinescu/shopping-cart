@@ -1,0 +1,25 @@
+name: Enforce Commit Message Rules
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  commit-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check commit message
+        run: |
+          commit_message=$(cat $GITHUB_EVENT_PATH | jq -r '.commits[].message')
+
+          # Perform your commit message validation checks here
+          # For example, you can use regular expressions or other logic
+          # Return a non-zero exit code (e.g., exit 1) if the commit message is invalid
+          # Use echo or other means to provide feedback on the error(s)
+
+          # Example rule: Require a specific prefix
+          if [[ ! $commit_message =~ ^\[UiPath\] ]]; then
+            echo "Commit message must start with [UiPath]."
+            exit 1
+          fi
